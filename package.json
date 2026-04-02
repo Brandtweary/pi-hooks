@@ -1,5 +1,5 @@
 {
-  "name": "pi-hooks",
+  "name": "@hsingjui/pi-hooks",
   "version": "0.0.1",
   "description": "Claude Code-compatible command hooks for the Pi coding agent",
   "type": "module",
@@ -22,6 +22,9 @@
     "url": "https://github.com/hsingjui/pi-hooks/issues"
   },
   "homepage": "https://github.com/hsingjui/pi-hooks#readme",
+  "publishConfig": {
+    "access": "public"
+  },
   "files": [
     "src",
     "README.md"

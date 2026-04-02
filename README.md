@@ -2,6 +2,35 @@
 
 将 Claude Code 的 command hooks 配置格式适配到 pi 的扩展事件系统。
 
+## Quick Setup
+
+1. 安装包：
+
+```bash
+pi install npm:@hsingjui/pi-hooks
+```
+
+2. 在 `.pi/settings.json`（或 `~/.pi/agent/settings.json`）里添加 hooks：
+
+```json
+{
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo 'agent finished'"
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+3. 执行 `/reload`，然后发一条消息测试。
+
 ## 当前支持范围
 
 - 仅支持 `type: "command"`
@@ -515,7 +544,7 @@ pi
 ### 作为 npm 包使用
 
 ```bash
-pi install npm:pi-hooks
+pi install npm:@hsingjui/pi-hooks
 ```
 
 ## 目录结构
