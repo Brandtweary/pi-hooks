@@ -1,0 +1,43 @@
+{
+  "name": "pi-hooks",
+  "version": "0.0.1",
+  "description": "Claude Code-compatible command hooks for the Pi coding agent",
+  "type": "module",
+  "keywords": [
+    "pi-package",
+    "pi",
+    "pi-coding-agent",
+    "extension",
+    "hooks",
+    "command-hooks",
+    "claude-code",
+    "claude-code-hooks"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hsingjui/pi-hooks.git"
+  },
+  "bugs": {
+    "url": "https://github.com/hsingjui/pi-hooks/issues"
+  },
+  "homepage": "https://github.com/hsingjui/pi-hooks#readme",
+  "files": [
+    "src",
+    "README.md"
+  ],
+  "exports": {
+    "./package.json": "./package.json"
+  },
+  "pi": {
+    "extensions": [
+      "./src/pi-hooks.ts"
+    ]
+  },
+  "peerDependencies": {
+    "@mariozechner/pi-coding-agent": "*"
+  },
+  "devDependencies": {
+    "typescript": "^6.0.2"
+  }
+}
