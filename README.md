@@ -1,16 +1,20 @@
 # pi-hooks
 
-将 Claude Code 的 command hooks 配置格式适配到 pi 的扩展事件系统。
+English | [简体中文](./README.zh-CN.md)
+
+Claude Code-compatible command hooks for the Pi coding agent.
+
+This package adapts Claude Code's hook configuration format to Pi's extension event system so existing command hook workflows can be reused with minimal changes.
 
 ## Quick Setup
 
-1. 安装包：
+1. Install the package:
 
 ```bash
 pi install npm:@hsingjui/pi-hooks
 ```
 
-2. 在 `.pi/settings.json`（或 `~/.pi/agent/settings.json`）里添加 hooks：
+2. Add hooks to `.pi/settings.json` (or `~/.pi/agent/settings.json`):
 
 ```json
 {
@@ -29,13 +33,13 @@ pi install npm:@hsingjui/pi-hooks
 }
 ```
 
-3. 执行 `/reload`，然后发一条消息测试。
+3. Run `/reload`, then send a message to test it.
 
-## 当前支持范围
+## Current Support
 
-- 仅支持 `type: "command"`
-- 支持 hook handler 的 `if` 字段（仅工具事件生效）
-- 支持事件：
+- Only `type: "command"` is supported
+- Supports the `if` field on individual hook handlers for tool events only
+- Supported events:
   - `SessionStart`
   - `SessionEnd`
   - `PreCompact`
@@ -45,20 +49,20 @@ pi install npm:@hsingjui/pi-hooks
   - `PostToolUseFailure`
   - `UserPromptSubmit`
   - `Stop`
-- 不支持 `http` / `prompt` / `agent`
+- Not supported: `http`, `prompt`, `agent`
 
-## 映射关系
+## Event Mapping
 
 - `SessionStart.startup` → `resources_discover(reason="startup")`
 - `SessionStart.startup` → `session_switch(reason="new")`
 - `SessionStart.resume` → `session_switch(reason="resume")`
 - `SessionStart.compact` → `session_compact`
 - `SessionEnd.other` → `session_shutdown`
-- `Stop` → `agent_end`（best-effort，对齐 Claude Code 的“完成响应后触发”）
+- `Stop` → `agent_end` (best-effort emulation of Claude Code's “after response completes” behavior)
 
-## 配置格式
+## Configuration Format
 
-在 `~/.pi/agent/settings.json` 或 `.pi/settings.json` 中配置：
+Configure hooks in `~/.pi/agent/settings.json` or `.pi/settings.json`:
 
 ```json
 {
@@ -106,17 +110,17 @@ pi install npm:@hsingjui/pi-hooks
 }
 ```
 
-## matcher 配置
+## `matcher` Behavior
 
-对齐 Claude Code：`matcher` 是**单个正则字符串**。
+To stay aligned with Claude Code, `matcher` is a **single regex string**.
 
-- 省略 `matcher` 表示匹配全部
-- `""` 表示匹配全部
-- `"*"` 表示匹配全部
-- 其他值按正则表达式处理
-- 正则无效时，退化为普通字符串精确匹配
+- Omitted `matcher` means match everything
+- `""` means match everything
+- `"*"` means match everything
+- Any other value is treated as a regular expression
+- If the regex is invalid, it falls back to exact string matching
 
-示例：
+Example:
 
 ```json
 {
@@ -145,11 +149,11 @@ pi install npm:@hsingjui/pi-hooks
 }
 ```
 
-各事件的 matcher 匹配字段：
+Event-specific matching fields:
 
 ### SessionStart
 
-匹配 `source`：
+Matches `source`:
 
 - `startup`
 - `resume`
@@ -157,15 +161,15 @@ pi install npm:@hsingjui/pi-hooks
 
 ### SessionEnd
 
-匹配 `reason`：
+Matches `reason`:
 
 - `other`
 
 ### PreToolUse / PostToolUse / PostToolUseFailure
 
-匹配 `tool_name`。
+Matches `tool_name`.
 
-注意：这里直接使用 pi 里的原始工具名，因此通常是小写，例如：
+Note: this uses Pi's raw tool names directly, so names are usually lowercase, for example:
 
 - `bash`
 - `read`
@@ -176,23 +180,23 @@ pi install npm:@hsingjui/pi-hooks
 - `ls`
 - `mcp__.*`
 
-说明：
+Notes:
 
-- `SessionEnd` 由 `session_shutdown` 触发
-- 当 `matcher` 省略时，默认按 `other` 处理
-- `UserPromptSubmit` / `Stop` 不支持 `matcher`，配置了也会被忽略
+- `SessionEnd` is triggered from `session_shutdown`
+- When `matcher` is omitted, it defaults to `other` for `SessionEnd`
+- `UserPromptSubmit` and `Stop` do not support `matcher`; if provided, it is ignored
 
-## if 条件
+## `if` Conditions
 
-对齐 Claude Code 的思路，`if` 配在单个 hook handler 上，只在工具事件中生效：
+Following Claude Code's approach, `if` is configured on each individual hook handler and only works for tool events:
 
 - `PreToolUse`
 - `PostToolUse`
 - `PostToolUseFailure`
 
-其他事件如果配置了 `if`，该 hook 不会运行。
+If `if` is set on other event types, that hook will not run.
 
-当前支持的形式：
+Currently supported forms:
 
 - `Bash(git *)`
 - `bash(git *)`
@@ -200,16 +204,16 @@ pi install npm:@hsingjui/pi-hooks
 - `Write(*.md)`
 - `mcp__memory__create_entities(*)`
 
-规则：
+Rules:
 
-- `if` 语法为 `ToolName(pattern)`
-- `ToolName` 按工具名比较，大小写不敏感
-- `pattern` 使用简单通配符匹配，`*` 表示任意字符串
-- `bash` 主要匹配 `tool_input.command`
-- `read` / `write` / `edit` 主要匹配 `tool_input.path`（或 `file_path`）
-- 其他工具优先匹配常见主字段，匹配不到时退化为 `tool_input` 的 JSON 字符串
+- `if` syntax is `ToolName(pattern)`
+- `ToolName` is compared case-insensitively
+- `pattern` uses simple wildcard matching where `*` means any string
+- `bash` mainly matches `tool_input.command`
+- `read`, `write`, and `edit` mainly match `tool_input.path` (or `file_path`)
+- Other tools first try common primary fields, then fall back to the JSON string of `tool_input`
 
-示例：只拦截 `git push`
+Example: block only `git push`
 
 ```json
 {
@@ -230,13 +234,13 @@ pi install npm:@hsingjui/pi-hooks
 }
 ```
 
-## Hook 输入
+## Hook Input
 
-默认输入字段尽量对齐 Claude Code hooks：
+Input fields are designed to be as close as possible to Claude Code hooks:
 
-- 通用字段：`session_id`、`transcript_path`、`cwd`、`hook_event_name`
-- 事件字段：如 `source`、`reason`、`tool_name`、`tool_input`、`tool_response`
-- **允许多出 pi 特有字段**，但不会破坏 Claude Code 风格脚本的读取方式
+- Common fields: `session_id`, `transcript_path`, `cwd`, `hook_event_name`
+- Event-specific fields such as `source`, `reason`, `tool_name`, `tool_input`, `tool_response`
+- **Pi-specific extra fields may also be included**, but they should not break Claude Code-style scripts
 
 ### SessionStart
 
@@ -274,14 +278,14 @@ pi install npm:@hsingjui/pi-hooks
 }
 ```
 
-说明：
+Notes:
 
-- `UserPromptSubmit` 不支持 `matcher`，即使配置也会被忽略
-- 会在用户提交输入后、agent loop 开始前触发
+- `UserPromptSubmit` does not support `matcher`; if configured, it is ignored
+- It runs after the user submits input and before the agent loop starts
 
 ### Stop
 
-对应 pi 的 `agent_end` 事件。
+Mapped from Pi's `agent_end` event.
 
 ```json
 {
@@ -294,17 +298,17 @@ pi install npm:@hsingjui/pi-hooks
 }
 ```
 
-说明：
+Notes:
 
-- `Stop` 在本轮 agent 处理完成后触发
-- 不支持 `matcher`，即使配置也会被忽略
-- `stop_hook_active` 用于标识当前继续执行是否由上一次 `Stop` hook 触发
-- `last_assistant_message` 会尽量提取最后一条 assistant 文本内容；若没有文本则为空字符串
-- `decision: "block"` 时，会以隐藏上下文 + 追加一轮 agent 的方式 **best-effort** 模拟 Claude Code 的“阻止停止并继续”语义
+- `Stop` runs after the current agent turn finishes
+- `Stop` does not support `matcher`; if configured, it is ignored
+- `stop_hook_active` indicates whether the current continuation was triggered by a previous `Stop` hook
+- `last_assistant_message` tries to extract the last assistant text content; if none exists, it is an empty string
+- When `decision: "block"` is returned, the extension best-effort simulates Claude Code's “prevent stopping and continue” behavior by injecting hidden context and starting another agent turn
 
 ### PreToolUse
 
-对应 pi 的 `tool_call` 事件。
+Mapped from Pi's `tool_call` event.
 
 ```json
 {
@@ -320,19 +324,19 @@ pi install npm:@hsingjui/pi-hooks
 }
 ```
 
-说明：
+Notes:
 
-- `PreToolUse` 在工具真正执行前触发
-- 映射到 pi 的 `tool_call`，而不是 `tool_execution_start`
-- 支持 `matcher`，并按 `tool_name` 做正则匹配
-- 不包含 `permission_mode`
-- `tool_name` 直接使用 pi 事件里的原始值，不做大小写转换
-- `tool_input` 对应 `tool_call` 的 `event.input`
-- `tool_use_id` 对应 `tool_call` 的 `event.toolCallId`
+- `PreToolUse` runs before the tool actually executes
+- It maps to Pi's `tool_call`, not `tool_execution_start`
+- `matcher` is supported and is applied to `tool_name`
+- `permission_mode` is not included
+- `tool_name` uses Pi's original event value without case conversion
+- `tool_input` comes from `tool_call.event.input`
+- `tool_use_id` comes from `tool_call.event.toolCallId`
 
 ### PostToolUse
 
-对应 pi 的 `tool_result` 事件，仅在工具成功完成时触发。
+Mapped from Pi's `tool_result` event and only fired when the tool succeeds.
 
 ```json
 {
@@ -359,20 +363,20 @@ pi install npm:@hsingjui/pi-hooks
 }
 ```
 
-说明：
+Notes:
 
-- `PostToolUse` 在工具成功执行后触发
-- 映射到 pi 的 `tool_result`
-- 不包含 `permission_mode`
-- `tool_name` 直接使用 pi 事件里的原始值，不做大小写转换
-- `tool_input` 对应 `tool_result` 的 `event.input`
-- `tool_response` 对应当前工具结果的 Claude Code 风格兼容对象
-- `tool_use_id` 对应 `tool_result` 的 `event.toolCallId`
-- 失败结果不会进入 `PostToolUse`，而是进入 `PostToolUseFailure`
+- `PostToolUse` runs after successful tool execution
+- It maps to Pi's `tool_result`
+- `permission_mode` is not included
+- `tool_name` uses Pi's original event value without case conversion
+- `tool_input` comes from `tool_result.event.input`
+- `tool_response` is the Claude Code-style compatible tool result object
+- `tool_use_id` comes from `tool_result.event.toolCallId`
+- Failed tool results are routed to `PostToolUseFailure` instead of `PostToolUse`
 
-## Hook 输出
+## Hook Output
 
-### UserPromptSubmit：阻止提示词或附加上下文
+### UserPromptSubmit: block the prompt or inject extra context
 
 ```json
 {
@@ -385,15 +389,15 @@ pi install npm:@hsingjui/pi-hooks
 }
 ```
 
-说明：
+Notes:
 
-- `decision` 对 `UserPromptSubmit` 只有一个有效值：`"block"`
-- 省略 `decision` 表示允许继续
-- 其他值会被忽略
-- `reason` 仅展示给用户，不会加入上下文
-- `additionalContext` 会作为隐藏上下文注入当前轮
+- For `UserPromptSubmit`, the only meaningful `decision` value is `"block"`
+- Omitting `decision` means allow
+- Other values are ignored
+- `reason` is shown to the user but not injected into context
+- `additionalContext` is injected as hidden context into the current turn
 
-### Stop：阻止停止并继续一轮
+### Stop: prevent stopping and continue for one more turn
 
 ```json
 {
@@ -406,25 +410,25 @@ pi install npm:@hsingjui/pi-hooks
 }
 ```
 
-说明：
+Notes:
 
-- `decision` 对 `Stop` 只有一个有效值：`"block"`
-- 省略 `decision` 表示允许结束
-- `reason` 会作为继续执行时注入给后续 agent turn 的隐藏上下文
-- `additionalContext` 会在 `decision: "block"` 时与 `reason` 一起注入下一轮；若未继续，则不会额外保留到后续用户输入
-- `stop_hook_active` 会在由 `Stop` hook 续跑出来的后续 `Stop` 事件里变为 `true`，用于避免无限循环
-- 当前实现基于 pi 的 `agent_end` + `sendMessage(..., { triggerTurn: true })`，属于 **best-effort** 对齐
+- For `Stop`, the only meaningful `decision` value is `"block"`
+- Omitting `decision` means finish normally
+- `reason` is injected as hidden context into the follow-up agent turn
+- `additionalContext` is injected together with `reason` when `decision: "block"`; if no continuation happens, it is not kept for later user input
+- `stop_hook_active` becomes `true` in follow-up `Stop` events triggered by a previous `Stop` hook, which helps avoid infinite loops
+- The current implementation is based on Pi's `agent_end` + `sendMessage(..., { triggerTurn: true })`, so behavior is best-effort
 
-### PreToolUse：阻止或改写参数
+### PreToolUse: deny or rewrite input
 
-可用输出字段：
+Available output fields:
 
 - `permissionDecision`: `"allow" | "deny" | "ask"`
-- `permissionDecisionReason`: 展示给用户/调用方的原因
-- `updatedInput`: 用于改写工具入参
-- `additionalContext`: 追加给后续处理的上下文
+- `permissionDecisionReason`: the reason shown to the user/caller
+- `updatedInput`: rewrites tool input before execution
+- `additionalContext`: appends extra context for later processing
 
-示例：阻止执行
+Example: deny execution
 
 ```json
 {
@@ -436,7 +440,7 @@ pi install npm:@hsingjui/pi-hooks
 }
 ```
 
-示例：允许并改写参数
+Example: allow and rewrite input
 
 ```json
 {
@@ -452,18 +456,18 @@ pi install npm:@hsingjui/pi-hooks
 }
 ```
 
-说明：
+Notes:
 
-- `permissionDecision: "deny"` 会阻止当前工具调用，并把 `permissionDecisionReason` 作为阻止原因返回给 agent；**不会直接停止整个当前处理流程**
-- `permissionDecision: "allow"` 会放行；若带 `updatedInput`，则在执行前改写参数
-- `permissionDecision: "ask"` 当前仅保留兼容字段语义，本扩展里不会额外弹出权限确认 UI
-- `updatedInput` 会合并到当前 `event.input` 上，未提供的字段保持原值
-- `additionalContext` 不会阻止执行，只作为附加上下文使用；会注入隐藏上下文，但默认不会额外显示一条 UI 提示
-- 若需要显式停止整个当前处理流程，请使用 Claude Code 通用字段 `continue: false`
+- `permissionDecision: "deny"` blocks the current tool call and returns `permissionDecisionReason` to the agent; it does **not** directly stop the entire current processing flow
+- `permissionDecision: "allow"` lets the tool run; if `updatedInput` is provided, the input is merged before execution
+- `permissionDecision: "ask"` is kept for compatibility only; this extension does not open an additional permission UI
+- `updatedInput` is merged into `event.input`, while unspecified fields keep their original values
+- `additionalContext` does not block execution; it is only injected as hidden context and does not normally create an extra UI message
+- To explicitly stop the current processing flow, use Claude Code's generic field `continue: false`
 
-### PostToolUse：附加上下文或 patch 结果
+### PostToolUse: append context or patch tool results
 
-Claude Code 风格输出示例：
+Claude Code-style output example:
 
 ```json
 {
@@ -476,7 +480,7 @@ Claude Code 风格输出示例：
 }
 ```
 
-或：
+Or:
 
 ```json
 {
@@ -487,7 +491,7 @@ Claude Code 风格输出示例：
 }
 ```
 
-pi 扩展层也支持直接 patch 工具结果：
+Pi-specific direct result patching is also supported:
 
 ```json
 {
@@ -502,7 +506,7 @@ pi 扩展层也支持直接 patch 工具结果：
 }
 ```
 
-也支持 Claude Code 通用输出字段：
+Claude Code generic output fields are also supported:
 
 ```json
 {
@@ -512,59 +516,59 @@ pi 扩展层也支持直接 patch 工具结果：
 }
 ```
 
-说明：
+Notes:
 
-- `hookSpecificOutput.hookEventName` 会按 Claude Code 规则识别
-- `decision: "block"` 不会回滚已执行的工具；会把 `reason` 当作反馈附加给模型上下文
-- `additionalContext` 会通过隐藏上下文注入当前 agent 流程，尽量贴近 Claude Code 的“给 Claude 追加上下文”语义；默认不会额外显示一条 UI 提示
-- `systemMessage` 在工具相关事件（`PreToolUse` / `PostToolUse` / `PostToolUseFailure`）默认静默，不额外显示 UI 提示
-- `continue: false` 会在工具事件里以 **best-effort** 方式停止当前处理；这和 `PreToolUse.permissionDecision: "deny"` 不同，后者只阻止当前工具并把原因反馈给 agent
-- `PostToolUse` / `PostToolUseFailure` 的 stopProcessing 默认不会再额外补一条本地 warning，优先以 hook 自身返回的 message / result 为准
-- 除 Claude Code 兼容字段外，仍支持 pi 特有 patch：
-  - 顶层 `content` / `details` / `isError`
+- `hookSpecificOutput.hookEventName` is recognized following Claude Code behavior
+- `decision: "block"` does not roll back an already executed tool; instead, `reason` is appended to model context as feedback
+- `additionalContext` is injected into the current agent flow as hidden context, approximating Claude Code's “append context for Claude” behavior; it does not normally produce an extra UI message
+- `systemMessage` is silent by default for tool-related events (`PreToolUse`, `PostToolUse`, `PostToolUseFailure`) and does not normally generate an extra UI message
+- `continue: false` stops current processing in tool events on a best-effort basis; this is different from `PreToolUse.permissionDecision: "deny"`, which only blocks the current tool and returns a reason to the agent
+- For `PostToolUse` and `PostToolUseFailure`, stop-processing behavior does not add an extra local warning by default; the hook's own returned message/result takes precedence
+- In addition to Claude Code-compatible fields, Pi-specific patching is still supported:
+  - top-level `content`, `details`, `isError`
   - `hookSpecificOutput.updatedToolResult`
-  - `updatedMCPToolOutput`（用于 MCP 工具输出替换）
+  - `updatedMCPToolOutput` (for MCP tool output replacement)
   - `hookSpecificOutput.updatedMCPToolOutput`
 
-## 使用方法
+## Usage
 
-### 本地开发
+### Local development
 
 ```bash
 pi
 ```
 
-然后执行：
+Then run:
 
 ```text
 /pi-hooks
 /pi-hooks-reset
 ```
 
-### 作为 npm 包使用
+### As an npm package
 
 ```bash
 pi install npm:@hsingjui/pi-hooks
 ```
 
-## 目录结构
+## Project Structure
 
-源码位于 `src/`：
+Source code lives in `src/`:
 
-- `src/pi-hooks.ts` - 扩展实现
-- `src/config.ts` - 配置加载与合并
-- `src/executor.ts` - command hook 执行器
-- `src/hooks/shared.ts` - hook 共享解析与执行辅助
-- `src/hooks/session-hooks.ts` - SessionStart / SessionEnd
-- `src/hooks/compact-hooks.ts` - PreCompact / PostCompact
-- `src/hooks/prompt-hooks.ts` - UserPromptSubmit
-- `src/hooks/tool-hooks.ts` - PreToolUse / PostToolUse / PostToolUseFailure
-- `src/hooks/stop-hooks.ts` - Stop
-- `src/types.ts` - 类型定义
+- `src/pi-hooks.ts` - extension entry point
+- `src/config.ts` - config loading and merging
+- `src/executor.ts` - command hook executor
+- `src/hooks/shared.ts` - shared parsing and execution helpers
+- `src/hooks/session-hooks.ts` - `SessionStart` / `SessionEnd`
+- `src/hooks/compact-hooks.ts` - `PreCompact` / `PostCompact`
+- `src/hooks/prompt-hooks.ts` - `UserPromptSubmit`
+- `src/hooks/tool-hooks.ts` - `PreToolUse` / `PostToolUse` / `PostToolUseFailure`
+- `src/hooks/stop-hooks.ts` - `Stop`
+- `src/types.ts` - type definitions
 
-## 说明
+## Notes
 
-- hook 命令会在当前会话 `cwd` 中执行
-- 全局配置与项目配置会按事件数组拼接合并
-- `PostToolUse` / `PostToolUseFailure` 现在支持返回 pi 的结果 patch
-- 输入 / 输出尽量兼容 Claude Code hooks；无法原样映射的部分按 pi 事件能力 best-effort 处理
+- Hook commands run in the current session `cwd`
+- Global config and project config are merged by concatenating event arrays
+- `PostToolUse` and `PostToolUseFailure` support Pi result patching
+- Input/output aims to be Claude Code-compatible where possible; anything that cannot be mapped exactly is handled in a best-effort way using Pi's event model
