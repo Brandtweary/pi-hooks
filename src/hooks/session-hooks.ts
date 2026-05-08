@@ -1,4 +1,4 @@
-import type { ExtensionAPI } from "@mariozechner/pi-coding-agent";
+import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import type { HookModuleContext } from "../hook-context";
 import type {
   HookExecutionContext,
@@ -24,39 +24,22 @@ export function registerSessionHooks(
   shared: HookModuleContext,
 ) {
   // SessionStart 映射：
-  // startup -> resources_discover(reason="startup")
-  // startup -> session_switch(reason="new")
-  // resume -> session_switch(reason="resume")
+  // startup -> session_start(reason="startup")
+  // startup -> session_start(reason="new")
+  // resume -> session_start(reason="resume")
   // compact -> session_compact
   //
   // SessionEnd 映射：
   // other -> session_shutdown
-  //
-  // 当前 pi 版本中，初次启动和 /reload 都会发出不带 reason 的 session_start，
-  // 但 resources_discover 会明确区分 startup / reload。
-  // 因此这里让 session_start 只负责初始化，真正的 startup hook 在
-  // resources_discover(reason="startup") 中触发，避免和 /reload 混淆。
-  pi.on("session_start", async (_event, ctx) => {
+  pi.on("session_start", async (event, ctx) => {
     shared.initSettings(ctx.cwd);
-  });
 
-  pi.on("resources_discover", async (event, ctx) => {
-    if (event.reason === "startup") {
-      await shared.triggerSessionStartHook("startup", ctx);
-    }
-
-    return {};
-  });
-
-  pi.on("session_switch", async (event, ctx) => {
-    const reason = (event as { reason?: string }).reason ?? "";
-
-    if (reason === "new") {
+    if (event.reason === "startup" || event.reason === "new") {
       await shared.triggerSessionStartHook("startup", ctx);
       return;
     }
 
-    if (reason === "resume") {
+    if (event.reason === "resume") {
       await shared.triggerSessionStartHook("resume", ctx);
     }
   });

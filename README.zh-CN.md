@@ -53,9 +53,9 @@ pi install npm:@hsingjui/pi-hooks
 
 ## 事件映射关系
 
-- `SessionStart.startup` → `resources_discover(reason="startup")`
-- `SessionStart.startup` → `session_switch(reason="new")`
-- `SessionStart.resume` → `session_switch(reason="resume")`
+- `SessionStart.startup` → `session_start(reason="startup")`
+- `SessionStart.startup` → `session_start(reason="new")`
+- `SessionStart.resume` → `session_start(reason="resume")`
 - `SessionStart.compact` → `session_compact`
 - `SessionEnd.other` → `session_shutdown`
 - `Stop` → `agent_end`（best-effort 对齐 Claude Code 的“响应完成后触发”行为）

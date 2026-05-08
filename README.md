@@ -53,9 +53,9 @@ pi install npm:@hsingjui/pi-hooks
 
 ## Event Mapping
 
-- `SessionStart.startup` → `resources_discover(reason="startup")`
-- `SessionStart.startup` → `session_switch(reason="new")`
-- `SessionStart.resume` → `session_switch(reason="resume")`
+- `SessionStart.startup` → `session_start(reason="startup")`
+- `SessionStart.startup` → `session_start(reason="new")`
+- `SessionStart.resume` → `session_start(reason="resume")`
 - `SessionStart.compact` → `session_compact`
 - `SessionEnd.other` → `session_shutdown`
 - `Stop` → `agent_end` (best-effort emulation of Claude Code's “after response completes” behavior)

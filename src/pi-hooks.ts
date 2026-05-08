@@ -1,4 +1,4 @@
-import type { ExtensionAPI } from "@mariozechner/pi-coding-agent";
+import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { createHookContext } from "./hook-context";
 import { registerCompactHooks } from "./hooks/compact-hooks";
 import { registerPromptHooks } from "./hooks/prompt-hooks";
