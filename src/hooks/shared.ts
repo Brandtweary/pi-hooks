@@ -228,6 +228,12 @@ export async function triggerSimpleHooks(
 ): Promise<HookRunResult> {
   const groups = getHookGroups(settings, eventName);
   const aggregatedResult: HookRunResult = {};
+  // Pi's notify("info", ...) renders via showStatus, which uses a single
+  // rolling slot (each new info message overwrites the previous one). Without
+  // batching, only the LAST hook's systemMessage survives. Collect them all
+  // and emit one combined info notification after the loop so every hook's
+  // status is visible.
+  const systemMessages: string[] = [];
 
   for (const group of groups) {
     const effectiveMatcher =
@@ -266,7 +272,7 @@ export async function triggerSimpleHooks(
         }
 
         if (commonOutput?.systemMessage) {
-          notify?.(commonOutput.systemMessage, "info");
+          systemMessages.push(commonOutput.systemMessage);
         }
 
         if (hookResult.exitCode !== 0) {
@@ -286,6 +292,10 @@ export async function triggerSimpleHooks(
         notify?.(`Hook 执行错误: ${String(err)}`, "error");
       }
     }
+  }
+
+  if (systemMessages.length > 0) {
+    notify?.(systemMessages.join(" · "), "info");
   }
 
   return aggregatedResult;
