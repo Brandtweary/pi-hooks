@@ -42,7 +42,7 @@ export async function triggerUserPromptSubmitHooks(
           );
 
           if (commonOutput?.systemMessage) {
-            notify?.(commonOutput.systemMessage, "warning");
+            notify?.(commonOutput.systemMessage, "info");
           }
 
           if (

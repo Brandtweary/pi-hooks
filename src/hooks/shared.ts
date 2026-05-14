@@ -266,7 +266,7 @@ export async function triggerSimpleHooks(
         }
 
         if (commonOutput?.systemMessage) {
-          notify?.(commonOutput.systemMessage, "warning");
+          notify?.(commonOutput.systemMessage, "info");
         }
 
         if (hookResult.exitCode !== 0) {

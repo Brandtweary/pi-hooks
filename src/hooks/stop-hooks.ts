@@ -58,7 +58,7 @@ export async function triggerStopHooks(
           );
 
           if (commonOutput?.systemMessage) {
-            notify?.(commonOutput.systemMessage, "warning");
+            notify?.(commonOutput.systemMessage, "info");
           }
 
           if (
